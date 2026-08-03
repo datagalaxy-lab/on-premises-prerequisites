@@ -1,0 +1,18 @@
+name: CI-macOS
+
+on:
+  push:
+    branches:
+    - main
+    - release/*
+  pull_request:
+    branches:
+    - main
+    - release/*
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v1
