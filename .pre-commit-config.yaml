@@ -1,0 +1,7 @@
+repos:
+- repo: https://github.com/koalaman/shellcheck-precommit
+  rev: v0.11.0
+  hooks:
+  - id: shellcheck
+    # Follow the sourced files (scripts/lib/common.bash).
+    args: ["-x"]

@@ -1,0 +1,45 @@
+# Storage test.
+# The PVC does not specify a storage class: the default one of the cluster is used.
+# The POD consumes the volume, so that storage classes with the
+# "WaitForFirstConsumer" binding mode provision it too.
+# It also checks the volume is writable: the POD succeeds only if it can write a file.
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: datagalaxy-test
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: datagalaxy-storage-test
+  labels:
+    app: datagalaxy-storage-test
+spec:
+  restartPolicy: Never
+  containers:
+  - image: nginxinc/nginx-unprivileged
+    name: storage-test
+    command:
+    - touch
+    - /data/datagalaxy-test
+    volumeMounts:
+    - name: data
+      mountPath: /data
+    resources:
+      limits:
+        cpu: 200m
+        memory: 300Mi
+      requests:
+        cpu: 100m
+        memory: 200Mi
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: datagalaxy-test
