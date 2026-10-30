@@ -1,0 +1,77 @@
+# Ingress controller test (section 5.4).
+# Before a manual deployment, replace "datagalaxy.int.domaine.com" with one of the
+# DataGalaxy domain names and, if needed, prefix the image with the internal registry.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: datagalaxy-ingress-test
+spec:
+  selector:
+    app: datagalaxy-ingress-test
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: datagalaxy-ingress-test
+data:
+  index.html: "<html><body>OK!</body></html>"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: datagalaxy-ingress-test
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  rules:
+  - host: "datagalaxy.int.domaine.com"
+    http:
+      paths:
+      - path: /datagalaxy-ingress-test
+        pathType: Prefix
+        backend:
+          service:
+            name: datagalaxy-ingress-test
+            port:
+              number: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: datagalaxy-ingress-test
+  name: datagalaxy-ingress-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: datagalaxy-ingress-test
+  template:
+    metadata:
+      labels:
+        app: datagalaxy-ingress-test
+    spec:
+      containers:
+      - image: nginxinc/nginx-unprivileged
+        name: web-server
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: nginx-volume
+          mountPath: /usr/share/nginx/html/datagalaxy-ingress-test
+        resources:
+          limits:
+            cpu: 200m
+            memory: 300Mi
+          requests:
+            cpu: 100m
+            memory: 200Mi
+      volumes:
+      - name: nginx-volume
+        configMap:
+          name: datagalaxy-ingress-test
